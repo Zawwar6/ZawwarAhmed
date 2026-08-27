@@ -9,92 +9,75 @@
     --accent-color: {{ section.settings.accent_color }};
   "
 >
+  <div class="gift-guide__background">
 
-  <!-- =========================
-       TOP BAR
-  ========================== -->
-
-  <div class="gift-guide__top">
-
-    <!-- LOGO -->
-    <div class="gift-guide__logo">
-
-      {% if section.settings.logo != blank %}
-
-        <img
-          src="{{ section.settings.logo | image_url: width: 500 }}"
-          alt="{{ shop.name }}"
-        >
-
-      {% else %}
-
-        {{ section.settings.logo_text }}
-
-      {% endif %}
-
-    </div>
-
-
-    <!-- TOP MESSAGE -->
-    <div class="gift-guide__top-message">
-      {{ section.settings.top_text }}
-    </div>
-
-
-    <!-- TOP BUTTON -->
-    <a
-      href="{{ section.settings.top_button_link }}"
-      class="gift-guide__button gift-guide__button--top"
-    >
-      <span>
-        {{ section.settings.top_button_text }}
-      </span>
-
-      <span class="gift-guide__arrow">
-        →
-      </span>
-    </a>
+    {% if section.settings.background_image != blank %}
+      <img
+        src="{{ section.settings.background_image | image_url: width: 2400 }}"
+        alt=""
+        class="gift-guide__image"
+        loading="eager"
+      >
+    {% endif %}
 
   </div>
 
+  <div class="gift-guide__content">
 
-  <!-- =========================
-       MAIN BANNER
-  ========================== -->
+    <!-- TOP BAR -->
+    <div class="gift-guide__top">
 
-  <div class="gift-guide__main">
+      <div class="gift-guide__logo">
+        {% if section.settings.logo != blank %}
+          <img
+            src="{{ section.settings.logo | image_url: width: 500 }}"
+            alt="{{ shop.name }}"
+          >
+        {% else %}
+          {{ section.settings.logo_text }}
+        {% endif %}
+      </div>
 
-    <!-- LEFT CONTENT -->
-    <div class="gift-guide__left">
+      <div class="gift-guide__top-message">
+        {{ section.settings.top_text }}
+      </div>
+
+      <a
+        href="{{ section.settings.top_button_link }}"
+        class="gift-guide__button gift-guide__button--top"
+      >
+        <span>{{ section.settings.top_button_text }}</span>
+
+        <span class="gift-guide__arrow">
+          →
+        </span>
+      </a>
+
+    </div>
+
+
+    <!-- MAIN CONTENT -->
+    <div class="gift-guide__hero">
 
       <div class="gift-guide__hero-content">
 
-        <!-- HEADING -->
         <h1 class="gift-guide__title">
           {{ section.settings.heading }}
         </h1>
 
-
-        <!-- DESCRIPTION -->
         <div class="gift-guide__description">
           {{ section.settings.description }}
         </div>
 
-
-        <!-- MAIN BUTTON -->
         <a
           href="{{ section.settings.main_button_link }}"
           class="gift-guide__button gift-guide__button--main"
         >
-
-          <span>
-            {{ section.settings.main_button_text }}
-          </span>
+          <span>{{ section.settings.main_button_text }}</span>
 
           <span class="gift-guide__arrow">
             →
           </span>
-
         </a>
 
       </div>
@@ -102,333 +85,131 @@
     </div>
 
 
-    <!-- RIGHT IMAGE -->
-    <div class="gift-guide__right">
-
-      {% if section.settings.background_image != blank %}
-
-        <img
-          src="{{ section.settings.background_image | image_url: width: 1800 }}"
-          alt=""
-          class="gift-guide__image"
-          loading="eager"
-        >
-
-      {% endif %}
-
+    <!-- BOTTOM TEXT -->
+    <div class="gift-guide__bottom">
+      {{ section.settings.bottom_text }}
     </div>
 
   </div>
-
-
-  <!-- =========================
-       BOTTOM TEXT
-  ========================== -->
-
-  <div class="gift-guide__bottom">
-    {{ section.settings.bottom_text }}
-  </div>
-
 </section>
 
 
 <style>
-
-  /* =====================================================
-     MAIN SECTION
-  ===================================================== */
-
   #gift-guide-{{ section.id }} {
     position: relative;
     width: 100%;
-
+    min-height: {{ section.settings.banner_height }}px;
+    overflow: hidden;
     background: var(--banner-bg);
     color: var(--text-color);
-
-    overflow: hidden;
-
     font-family: Arial, Helvetica, sans-serif;
-
-    border-bottom: 1px solid #eee;
   }
 
+  /* =========================
+     BACKGROUND
+  ========================= */
 
-  /* =====================================================
-     TOP BAR
-  ===================================================== */
+  #gift-guide-{{ section.id }} .gift-guide__background {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  #gift-guide-{{ section.id }} .gift-guide__image {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    object-position: center center;
+  }
+
+  /* =========================
+     CONTENT
+  ========================= */
+
+  #gift-guide-{{ section.id }} .gift-guide__content {
+    position: relative;
+    z-index: 2;
+    min-height: {{ section.settings.banner_height }}px;
+    padding: 0 30px;
+  }
+
+  /* =========================
+     TOP
+  ========================= */
 
   #gift-guide-{{ section.id }} .gift-guide__top {
-
-    position: relative;
-
     width: 100%;
-
     display: grid;
-
     grid-template-columns: 1fr auto 1fr;
-
     align-items: start;
-
-    gap: 20px;
-
-    padding: 5px 30px 0;
-
-    z-index: 5;
+    gap: 30px;
+    padding-top: 5px;
   }
 
-
-  /* =====================================================
-     LOGO
-  ===================================================== */
-
   #gift-guide-{{ section.id }} .gift-guide__logo {
-
     justify-self: start;
 
     display: flex;
-
     align-items: center;
 
     min-height: 36px;
-
     padding: 4px 8px;
 
     background: #fff;
 
-    border: 1px solid #111;
-
-    color: #111;
-
     font-size: 19px;
-
     line-height: 1;
-
     font-weight: 700;
-
     letter-spacing: 0.5px;
-  }
 
+    border: 1px solid #111;
+  }
 
   #gift-guide-{{ section.id }} .gift-guide__logo img {
-
-    display: block;
-
-    width: auto;
-
     max-width: 120px;
-
     max-height: 35px;
+    display: block;
   }
 
-
-  /* =====================================================
-     TOP MESSAGE
-     ===================================================== */
-
   #gift-guide-{{ section.id }} .gift-guide__top-message {
-
     justify-self: center;
 
     background: #fff;
-
     border: 1px solid #111;
 
     padding: 7px 14px;
 
     font-size: 12px;
-
     line-height: 1.2;
-
     text-align: center;
 
     white-space: nowrap;
-
-    color: #111;
   }
 
-
-  /* =====================================================
-     TOP BUTTON
-     ===================================================== */
-
   #gift-guide-{{ section.id }} .gift-guide__button--top {
-
     justify-self: end;
   }
 
-
-  /* =====================================================
-     MAIN TWO-COLUMN AREA
-     ===================================================== */
-
-  #gift-guide-{{ section.id }} .gift-guide__main {
-
-    position: relative;
-
-    display: grid;
-
-    grid-template-columns: 45% 55%;
-
-    min-height: {{ section.settings.banner_height }}px;
-
-    width: 100%;
-  }
-
-
-  /* =====================================================
-     LEFT SIDE
-     ===================================================== */
-
-  #gift-guide-{{ section.id }} .gift-guide__left {
-
-    position: relative;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: flex-start;
-
-    background: var(--banner-bg);
-
-    padding: 50px 30px 70px 40px;
-
-    z-index: 2;
-  }
-
-
-  #gift-guide-{{ section.id }} .gift-guide__hero-content {
-
-    width: 100%;
-
-    max-width: 430px;
-  }
-
-
-  /* =====================================================
-     HEADING
-     ===================================================== */
-
-  #gift-guide-{{ section.id }} .gift-guide__title {
-
-    display: inline-block;
-
-    margin: 0 0 24px;
-
-    padding: 4px 7px;
-
-    background: #fff;
-
-    border: 1px solid #111;
-
-    color: #111;
-
-    font-size: clamp(38px, 4.2vw, 58px);
-
-    line-height: 0.95;
-
-    font-weight: 700;
-
-    letter-spacing: -2px;
-  }
-
-
-  /* =====================================================
-     DESCRIPTION
-     ===================================================== */
-
-  #gift-guide-{{ section.id }} .gift-guide__description {
-
-    display: block;
-
-    width: 100%;
-
-    max-width: 355px;
-
-    margin: 0 0 15px;
-
-    padding: 8px;
-
-    background: #fff;
-
-    border: 1px solid #111;
-
-    color: #111;
-
-    font-size: 13px;
-
-    line-height: 1.4;
-  }
-
-
-  #gift-guide-{{ section.id }} .gift-guide__description p {
-
-    margin: 0;
-  }
-
-
-  /* =====================================================
-     RIGHT IMAGE SIDE
-     ===================================================== */
-
-  #gift-guide-{{ section.id }} .gift-guide__right {
-
-    position: relative;
-
-    width: 100%;
-
-    height: 100%;
-
-    min-height: {{ section.settings.banner_height }}px;
-
-    background: #fff;
-
-    overflow: hidden;
-  }
-
-
-  #gift-guide-{{ section.id }} .gift-guide__image {
-
-    position: absolute;
-
-    inset: 0;
-
-    width: 100%;
-
-    height: 100%;
-
-    display: block;
-
-    object-fit: cover;
-
-    object-position: center center;
-  }
-
-
-  /* =====================================================
+  /* =========================
      BUTTON
-     ===================================================== */
+  ========================= */
 
   #gift-guide-{{ section.id }} .gift-guide__button {
-
     position: relative;
 
     display: inline-flex;
-
     align-items: center;
-
     justify-content: space-between;
-
-    gap: 25px;
+    gap: 20px;
 
     min-width: 160px;
-
     min-height: 38px;
 
-    padding: 9px 16px;
+    padding: 8px 16px;
 
     background: var(--button-bg);
-
     color: var(--button-text);
 
     border: 1px solid #111;
@@ -436,309 +217,242 @@
     text-decoration: none;
 
     font-size: 11px;
-
     line-height: 1;
-
     font-weight: 500;
-
     letter-spacing: 0.2px;
 
     overflow: hidden;
 
     transition:
-      transform 0.25s ease,
-      color 0.35s ease;
+      color 0.35s ease,
+      background-color 0.35s ease,
+      transform 0.25s ease;
   }
 
-
-  /* Animated background */
-
   #gift-guide-{{ section.id }} .gift-guide__button::before {
-
     content: "";
 
     position: absolute;
-
     left: 0;
-
     bottom: 0;
 
     width: 100%;
-
     height: 0;
 
     background: #111;
 
-    z-index: 0;
+    transition: height 0.35s cubic-bezier(.65,0,.35,1);
 
-    transition:
-      height 0.4s cubic-bezier(.65, 0, .35, 1);
+    z-index: 0;
   }
 
-
-  /* Text */
-
-  #gift-guide-{{ section.id }} .gift-guide__button > span {
-
+  #gift-guide-{{ section.id }} .gift-guide__button span {
     position: relative;
-
     z-index: 2;
   }
 
-
-  /* Arrow */
-
   #gift-guide-{{ section.id }} .gift-guide__arrow {
+    font-size: 20px;
+    line-height: 1;
 
     display: inline-block;
 
-    font-size: 20px;
-
-    line-height: 1;
-
     transition:
-      transform 0.4s cubic-bezier(.65, 0, .35, 1);
+      transform 0.35s cubic-bezier(.65,0,.35,1);
   }
 
-
-  /* =====================================================
-     BUTTON HOVER ANIMATION
-     ===================================================== */
+  /* HOVER ANIMATION */
 
   #gift-guide-{{ section.id }} .gift-guide__button:hover {
-
     color: #fff;
-
     transform: translateY(-2px);
   }
 
-
   #gift-guide-{{ section.id }} .gift-guide__button:hover::before {
-
     height: 100%;
   }
 
-
   #gift-guide-{{ section.id }} .gift-guide__button:hover .gift-guide__arrow {
-
-    transform: translateX(8px);
+    transform: translateX(7px);
   }
 
+  /* =========================
+     HERO
+  ========================= */
 
-  /* =====================================================
-     MAIN BUTTON
-     ===================================================== */
+  #gift-guide-{{ section.id }} .gift-guide__hero {
+    min-height: calc({{ section.settings.banner_height }}px - 100px);
+
+    display: flex;
+    align-items: center;
+  }
+
+  #gift-guide-{{ section.id }} .gift-guide__hero-content {
+    max-width: 440px;
+    padding-top: 20px;
+  }
+
+  #gift-guide-{{ section.id }} .gift-guide__title {
+    display: inline-block;
+
+    margin: 0 0 24px;
+
+    padding: 4px 7px;
+
+    background: #fff;
+    border: 1px solid #111;
+
+    font-size: clamp(38px, 4.5vw, 58px);
+    line-height: 0.95;
+    font-weight: 700;
+    letter-spacing: -2px;
+  }
+
+  #gift-guide-{{ section.id }} .gift-guide__description {
+    display: block;
+
+    max-width: 355px;
+
+    margin-bottom: 15px;
+
+    padding: 8px;
+
+    background: #fff;
+    border: 1px solid #111;
+
+    font-size: 13px;
+    line-height: 1.4;
+  }
 
   #gift-guide-{{ section.id }} .gift-guide__button--main {
+    min-width: 160px;
+    min-height: 36px;
 
     background: #111;
-
     color: #fff;
-
-    min-width: 160px;
   }
 
-
   #gift-guide-{{ section.id }} .gift-guide__button--main::before {
-
     background: var(--accent-color);
   }
 
-
   #gift-guide-{{ section.id }} .gift-guide__button--main:hover {
-
     color: #111;
   }
 
-
-  /* =====================================================
-     BOTTOM TEXT
-     ===================================================== */
+  /* =========================
+     BOTTOM
+  ========================= */
 
   #gift-guide-{{ section.id }} .gift-guide__bottom {
-
     position: absolute;
-
     bottom: 8px;
-
     left: 50%;
 
     transform: translateX(-50%);
 
-    z-index: 10;
-
     padding: 3px 8px;
 
     background: #fff;
-
     border: 1px solid #111;
 
-    color: #111;
-
     font-size: 10px;
-
     line-height: 1;
 
     white-space: nowrap;
   }
 
 
-  /* =====================================================
-     TABLET
-     ===================================================== */
-
-  @media screen and (max-width: 900px) {
-
-    #gift-guide-{{ section.id }} .gift-guide__main {
-
-      grid-template-columns: 48% 52%;
-    }
-
-    #gift-guide-{{ section.id }} .gift-guide__left {
-
-      padding-left: 25px;
-
-      padding-right: 20px;
-    }
-
-    #gift-guide-{{ section.id }} .gift-guide__title {
-
-      font-size: 42px;
-    }
-  }
-
-
-  /* =====================================================
+  /* =========================
      MOBILE
-     ===================================================== */
+  ========================= */
 
   @media screen and (max-width: 749px) {
 
-    #gift-guide-{{ section.id }} .gift-guide__top {
-
-      grid-template-columns: 1fr 1fr;
-
-      gap: 8px;
-
-      padding: 5px 15px 0;
+    #gift-guide-{{ section.id }} {
+      min-height: 650px;
     }
 
+    #gift-guide-{{ section.id }} .gift-guide__content {
+      min-height: 650px;
+      padding: 0 15px;
+    }
+
+    #gift-guide-{{ section.id }} .gift-guide__top {
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
 
     #gift-guide-{{ section.id }} .gift-guide__top-message {
-
       display: none;
     }
 
-
     #gift-guide-{{ section.id }} .gift-guide__button--top {
-
       min-width: auto;
+      justify-self: end;
     }
 
-
-    #gift-guide-{{ section.id }} .gift-guide__main {
-
-      grid-template-columns: 1fr;
-
-      min-height: auto;
+    #gift-guide-{{ section.id }} .gift-guide__hero {
+      min-height: 560px;
+      align-items: flex-end;
+      padding-bottom: 55px;
     }
-
-
-    /* Image ABOVE content on mobile */
-
-    #gift-guide-{{ section.id }} .gift-guide__right {
-
-      order: 1;
-
-      height: 350px;
-
-      min-height: 350px;
-    }
-
-
-    #gift-guide-{{ section.id }} .gift-guide__left {
-
-      order: 2;
-
-      min-height: 430px;
-
-      padding: 45px 15px 70px;
-
-      align-items: flex-start;
-    }
-
 
     #gift-guide-{{ section.id }} .gift-guide__hero-content {
-
-      max-width: 100%;
+      width: 100%;
+      max-width: 330px;
     }
 
-
     #gift-guide-{{ section.id }} .gift-guide__title {
-
       font-size: 38px;
-
       letter-spacing: -1.5px;
-
       margin-bottom: 18px;
     }
 
-
     #gift-guide-{{ section.id }} .gift-guide__description {
-
-      max-width: 100%;
-
       font-size: 12px;
+      max-width: 100%;
     }
-
 
     #gift-guide-{{ section.id }} .gift-guide__bottom {
-
-      max-width: 90%;
-
-      overflow: hidden;
-
-      text-overflow: ellipsis;
-
       font-size: 8px;
+      max-width: 90%;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
-
 </style>
 
 
 {% schema %}
 {
   "name": "Gift Guide Banner",
-
   "settings": [
-
     {
       "type": "header",
-      "content": "Banner Image"
+      "content": "Background"
     },
     {
       "type": "image_picker",
       "id": "background_image",
-      "label": "Right side image"
+      "label": "Banner illustration"
     },
     {
       "type": "color",
       "id": "background_color",
-      "label": "Left side background",
+      "label": "Background color",
       "default": "#ffffff"
     },
-    {
-      "type": "range",
-      "id": "banner_height",
-      "label": "Banner height",
-      "min": 400,
-      "max": 1000,
-      "step": 10,
-      "unit": "px",
-      "default": 580
-    },
-
+   {
+  "type": "range",
+  "id": "banner_height",
+  "label": "Banner height",
+  "min": 400,
+  "max": 1000,
+  "step": 10,
+  "unit": "px",
+  "default": 580
+},
     {
       "type": "header",
       "content": "Logo"
@@ -754,10 +468,9 @@
       "label": "Logo text",
       "default": "TISSO VISON"
     },
-
     {
       "type": "header",
-      "content": "Top Message"
+      "content": "Top message"
     },
     {
       "type": "text",
@@ -765,10 +478,9 @@
       "label": "Top message",
       "default": "Find the ideal gift for your loved ones."
     },
-
     {
       "type": "header",
-      "content": "Top Button"
+      "content": "Top button"
     },
     {
       "type": "text",
@@ -781,10 +493,9 @@
       "id": "top_button_link",
       "label": "Button link"
     },
-
     {
       "type": "header",
-      "content": "Main Content"
+      "content": "Main content"
     },
     {
       "type": "text",
@@ -798,10 +509,9 @@
       "label": "Description",
       "default": "<p>Discover Joy: Your Ultimate Holiday Gift Destination.<br>Explore our curated selection and find the perfect gifts to delight your loved ones this holiday season.</p>"
     },
-
     {
       "type": "header",
-      "content": "Main Button"
+      "content": "Main button"
     },
     {
       "type": "text",
@@ -814,10 +524,9 @@
       "id": "main_button_link",
       "label": "Button link"
     },
-
     {
       "type": "header",
-      "content": "Bottom Text"
+      "content": "Bottom text"
     },
     {
       "type": "text",
@@ -825,7 +534,6 @@
       "label": "Bottom text",
       "default": "SUSTAINABLE, ETHICALLY MADE CLOTHES IN SIZES XXS TO 6XL"
     },
-
     {
       "type": "header",
       "content": "Colors"
@@ -854,9 +562,7 @@
       "label": "Button hover color",
       "default": "#fff200"
     }
-
   ],
-
   "presets": [
     {
       "name": "Gift Guide Banner"
