@@ -678,186 +678,254 @@
       });
 
 
-    /* =========================================
-       ADD TO CART
-    ========================================== */
+   ```javascript
+/* =========================================
+   ADD TO CART
+========================================= */
 
-    modalAdd.addEventListener(
-      'click',
-      function () {
+modalAdd.addEventListener(
+  'click',
+  function () {
 
-        if (
-          !currentVariant ||
-          !currentVariant.available
-        ) {
+    if (
+      !currentVariant ||
+      !currentVariant.available
+    ) {
 
-          modalError.textContent =
-            '{{ section.settings.select_variant_error | escape }}';
+      modalError.textContent =
+        '{{ section.settings.select_variant_error | escape }}';
 
-          modalError.classList.add(
-            'is-visible'
-          );
+      modalError.classList.add(
+        'is-visible'
+      );
 
-          return;
-
-        }
-
-
-        modalAdd.classList.add(
-          'is-loading'
-        );
+      return;
+    }
 
 
-        modalError.classList.remove(
-          'is-visible'
-        );
+    modalAdd.classList.add(
+      'is-loading'
+    );
+
+    modalError.classList.remove(
+      'is-visible'
+    );
 
 
-        fetch(
-          window.Shopify.routes.root +
-          'cart/add.js',
-          {
+    fetch(
+      window.Shopify.routes.root +
+      'cart/add.js',
+      {
+        method: 'POST',
 
-            method: 'POST',
+        headers: {
+          'Content-Type':
+            'application/json',
+          'Accept':
+            'application/json'
+        },
 
-            headers: {
-              'Content-Type':
-                'application/json'
-            },
+        body: JSON.stringify({
 
-            body: JSON.stringify({
-
-              items: [
-                {
-                  id: currentVariant.id,
-                  quantity: 1
-                }
-              ]
-
-            })
-
-          }
-        )
-
-        .then(function (response) {
-
-          if (!response.ok) {
-
-            return response
-              .json()
-              .then(function (error) {
-
-                throw error;
-
-              });
-
-          }
-
-          return response.json();
+          items: [
+            {
+              id: currentVariant.id,
+              quantity: 1
+            }
+          ]
 
         })
 
-        .then(function () {
+      }
+    )
 
-          modalAdd.classList.remove(
-            'is-loading'
-          );
+    .then(function (response) {
 
+      if (!response.ok) {
 
-          /*
-           * Close popup after adding.
-           */
+        return response
+          .json()
+          .then(function (error) {
 
-          closeModal();
+            throw error;
 
-
-          /*
-           * Refresh Shopify cart UI
-           * when available.
-           */
-
-          document.dispatchEvent(
-            new CustomEvent(
-              'cart:refresh'
-            )
-          );
-
-
-          /*
-           * Theme cart drawer support.
-           */
-
-          if (
-            typeof window.refreshCart ===
-            'function'
-          ) {
-
-            window.refreshCart();
-
-          }
-
-        })
-
-        .catch(function (error) {
-
-          console.error(
-            'Add to cart error:',
-            error
-          );
-
-
-          modalAdd.classList.remove(
-            'is-loading'
-          );
-
-
-          modalError.textContent =
-            '{{ section.settings.cart_error_text | escape }}';
-
-          modalError.classList.add(
-            'is-visible'
-          );
-
-        });
+          });
 
       }
-    );
+
+      return response.json();
+
+    })
+
+    .then(function () {
+
+      /*
+       * Remove loading state
+       */
+      modalAdd.classList.remove(
+        'is-loading'
+      );
 
 
-    /* =========================================
-       CLOSE EVENTS
-    ========================================== */
-
-    closeButton.addEventListener(
-      'click',
-      closeModal
-    );
+      /*
+       * Close product modal
+       */
+      closeModal();
 
 
-    overlay.addEventListener(
-      'click',
-      closeModal
-    );
+      /*
+       * Get updated cart drawer
+       */
+      return fetch(
+        window.Shopify.routes.root +
+        '?section_id=cart-drawer'
+      );
+
+    })
+
+    .then(function (response) {
+
+      return response.text();
+
+    })
+
+    .then(function (html) {
+
+      /*
+       * Parse returned HTML
+       */
+      const parser =
+        new DOMParser();
+
+      const doc =
+        parser.parseFromString(
+          html,
+          'text/html'
+        );
 
 
-    document.addEventListener(
-      'keydown',
-      function (event) {
+      /*
+       * Find current cart drawer
+       */
+      const currentDrawer =
+        document.querySelector(
+          'cart-drawer'
+        );
 
-        if (
-          event.key === 'Escape' &&
-          modal.classList.contains('is-open')
-        ) {
 
-          closeModal();
+      /*
+       * Find new cart drawer
+       */
+      const newDrawer =
+        doc.querySelector(
+          'cart-drawer'
+        );
 
-        }
+
+      /*
+       * Replace drawer content
+       */
+      if (
+        currentDrawer &&
+        newDrawer
+      ) {
+
+        currentDrawer.innerHTML =
+          newDrawer.innerHTML;
 
       }
-    );
 
 
-  })();
+      /*
+       * Open cart drawer
+       */
+      if (
+        currentDrawer &&
+        typeof currentDrawer.open ===
+        'function'
+      ) {
+
+        currentDrawer.open();
+
+      }
+
+      /*
+       * Fallback
+       */
+      else if (currentDrawer) {
+
+        currentDrawer.classList.add(
+          'is-open'
+        );
+
+        currentDrawer.classList.add(
+          'active'
+        );
+
+        currentDrawer.removeAttribute(
+          'hidden'
+        );
+
+      }
+
+
+      /*
+       * Update cart count
+       */
+      fetch(
+        window.Shopify.routes.root +
+        'cart.js'
+      )
+
+      .then(function (response) {
+
+        return response.json();
+
+      })
+
+      .then(function (cart) {
+
+        document
+          .querySelectorAll(
+            '[data-cart-count]'
+          )
+          .forEach(function (element) {
+
+            element.textContent =
+              cart.item_count;
+
+          });
+
+      });
+
+    })
+
+    .catch(function (error) {
+
+      console.error(
+        'Add to cart error:',
+        error
+      );
+
+
+      modalAdd.classList.remove(
+        'is-loading'
+      );
+
+
+      modalError.textContent =
+        '{{ section.settings.cart_error_text | escape }}';
+
+      modalError.classList.add(
+        'is-visible'
+      );
+
+    });
+
+  }
+);
+```
+
 
 </script>
 
