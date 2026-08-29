@@ -211,6 +211,7 @@
 
 </section>
 
+
 <script>
 
   (function () {
@@ -345,6 +346,7 @@
             button.className =
               'phs-option__value';
 
+
             if (valueIndex === 0) {
 
               button.classList.add(
@@ -352,6 +354,7 @@
               );
 
             }
+
 
             button.textContent =
               value;
@@ -534,6 +537,7 @@
         modalAdd.disabled =
           !currentVariant.available;
 
+
         modalAdd.querySelector(
           '.phs-modal__add-text'
         ).textContent =
@@ -584,6 +588,7 @@
         'is-visible'
       );
 
+
       modalError.textContent =
         '';
 
@@ -595,10 +600,12 @@
         'is-open'
       );
 
+
       modal.setAttribute(
         'aria-hidden',
         'false'
       );
+
 
       document.body.style.overflow =
         'hidden';
@@ -616,10 +623,12 @@
         'is-open'
       );
 
+
       modal.setAttribute(
         'aria-hidden',
         'true'
       );
+
 
       document.body.style.overflow =
         '';
@@ -679,6 +688,201 @@
 
 
     /* =========================================
+       OPEN CART DRAWER
+    ========================================== */
+
+    function openCartDrawer() {
+
+      /*
+       * Shopify / Dawn cart drawer
+       */
+      const cartDrawer =
+        document.querySelector(
+          'cart-drawer'
+        );
+
+
+      if (cartDrawer) {
+
+        /*
+         * Preferred method
+         */
+        if (
+          typeof cartDrawer.open ===
+          'function'
+        ) {
+
+          cartDrawer.open();
+
+          return;
+
+        }
+
+
+        /*
+         * Fallback
+         */
+        cartDrawer.classList.add(
+          'is-open'
+        );
+
+        cartDrawer.classList.add(
+          'active'
+        );
+
+        cartDrawer.removeAttribute(
+          'hidden'
+        );
+
+        return;
+
+      }
+
+
+      /*
+       * Common custom drawer selectors
+       */
+      const customDrawer =
+        document.querySelector(
+          '#CartDrawer'
+        ) ||
+        document.querySelector(
+          '.cart-drawer'
+        ) ||
+        document.querySelector(
+          '[data-cart-drawer]'
+        );
+
+
+      if (customDrawer) {
+
+        customDrawer.classList.add(
+          'is-open'
+        );
+
+        customDrawer.classList.add(
+          'active'
+        );
+
+        customDrawer.removeAttribute(
+          'hidden'
+        );
+
+      }
+
+
+      /*
+       * Try cart drawer trigger
+       */
+      const cartTrigger =
+        document.querySelector(
+          '[aria-controls="CartDrawer"]'
+        ) ||
+        document.querySelector(
+          '[data-cart-drawer-trigger]'
+        );
+
+
+      if (cartTrigger) {
+
+        cartTrigger.click();
+
+      }
+
+    }
+
+
+    /* =========================================
+       UPDATE CART DRAWER
+    ========================================== */
+
+    function updateCartDrawer() {
+
+      /*
+       * Fetch latest cart drawer section
+       */
+      return fetch(
+        window.Shopify.routes.root +
+        '?section_id=cart-drawer'
+      )
+
+      .then(function (response) {
+
+        if (!response.ok) {
+
+          throw new Error(
+            'Could not load cart drawer'
+          );
+
+        }
+
+        return response.text();
+
+      })
+
+      .then(function (html) {
+
+        const parser =
+          new DOMParser();
+
+
+        const doc =
+          parser.parseFromString(
+            html,
+            'text/html'
+          );
+
+
+        /*
+         * Existing drawer
+         */
+        const currentDrawer =
+          document.querySelector(
+            'cart-drawer'
+          );
+
+
+        /*
+         * New drawer
+         */
+        const newDrawer =
+          doc.querySelector(
+            'cart-drawer'
+          );
+
+
+        /*
+         * Replace drawer contents
+         */
+        if (
+          currentDrawer &&
+          newDrawer
+        ) {
+
+          currentDrawer.innerHTML =
+            newDrawer.innerHTML;
+
+        }
+
+
+        /*
+         * Open drawer after update
+         */
+        setTimeout(
+          function () {
+
+            openCartDrawer();
+
+          },
+          50
+        );
+
+      });
+
+    }
+
+
+    /* =========================================
        ADD TO CART
     ========================================== */
 
@@ -694,15 +898,20 @@
           modalError.textContent =
             '{{ section.settings.select_variant_error | escape }}';
 
+
           modalError.classList.add(
             'is-visible'
           );
+
 
           return;
 
         }
 
 
+        /*
+         * Loading state
+         */
         modalAdd.classList.add(
           'is-loading'
         );
@@ -713,6 +922,9 @@
         );
 
 
+        /*
+         * Add product to Shopify cart
+         */
         fetch(
           window.Shopify.routes.root +
           'cart/add.js',
@@ -721,22 +933,36 @@
             method: 'POST',
 
             headers: {
+
               'Content-Type':
+                'application/json',
+
+              'Accept':
                 'application/json'
+
             },
+
 
             body: JSON.stringify({
 
               items: [
+
                 {
-                  id: currentVariant.id,
-                  quantity: 1
+
+                  id:
+                    currentVariant.id,
+
+                  quantity:
+                    1
+
                 }
+
               ]
 
             })
 
           }
+
         )
 
         .then(function (response) {
@@ -753,40 +979,92 @@
 
           }
 
+
           return response.json();
 
         })
 
+
         .then(function () {
 
+          /*
+           * Stop loading
+           */
           modalAdd.classList.remove(
             'is-loading'
           );
 
 
           /*
-           * Close popup after adding.
+           * Close product modal
            */
-
           closeModal();
 
 
           /*
-           * Refresh Shopify cart UI
-           * when available.
+           * Update cart drawer
            */
+          return updateCartDrawer();
 
+        })
+
+
+        .then(function () {
+
+          /*
+           * Get latest cart
+           * for cart count
+           */
+          return fetch(
+            window.Shopify.routes.root +
+            'cart.js'
+          );
+
+        })
+
+
+        .then(function (response) {
+
+          return response.json();
+
+        })
+
+
+        .then(function (cart) {
+
+          /*
+           * Update cart count
+           */
+          document
+            .querySelectorAll(
+              '[data-cart-count]'
+            )
+            .forEach(function (element) {
+
+              element.textContent =
+                cart.item_count;
+
+            });
+
+
+          /*
+           * Notify theme
+           */
           document.dispatchEvent(
             new CustomEvent(
-              'cart:refresh'
+              'cart:refresh',
+              {
+                detail: {
+                  cart: cart
+                }
+              }
             )
           );
 
 
           /*
-           * Theme cart drawer support.
+           * Theme refresh function
            */
-
           if (
             typeof window.refreshCart ===
             'function'
@@ -798,6 +1076,7 @@
 
         })
 
+
         .catch(function (error) {
 
           console.error(
@@ -806,13 +1085,20 @@
           );
 
 
+          /*
+           * Remove loading
+           */
           modalAdd.classList.remove(
             'is-loading'
           );
 
 
+          /*
+           * Show error
+           */
           modalError.textContent =
             '{{ section.settings.cart_error_text | escape }}';
+
 
           modalError.classList.add(
             'is-visible'
@@ -860,6 +1146,7 @@
   })();
 
 </script>
+
 
 
 {% schema %}
