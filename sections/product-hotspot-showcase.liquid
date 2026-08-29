@@ -1,0 +1,1844 @@
+<section
+  id="product-hotspot-{{ section.id }}"
+  class="phs"
+  style="
+    --phs-columns: {{ section.settings.columns }};
+    --phs-gap: {{ section.settings.gap }}px;
+    --phs-bg: {{ section.settings.background_color }};
+    --phs-hotspot-size: {{ section.settings.hotspot_size }}px;
+    --phs-hotspot-bg: {{ section.settings.hotspot_background }};
+    --phs-hotspot-color: {{ section.settings.hotspot_color }};
+    --phs-popup-width: {{ section.settings.popup_width }}px;
+  "
+>
+
+  <div class="phs__grid">
+
+    {% for block in section.blocks %}
+
+      {% assign selected_product = block.settings.product %}
+
+      <div
+        class="phs__item"
+        {{ block.shopify_attributes }}
+      >
+
+        {% if block.settings.image != blank %}
+
+          <img
+            class="phs__image"
+            src="{{ block.settings.image | image_url: width: 1800 }}"
+            alt="{{ block.settings.image.alt | escape }}"
+            loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
+          >
+
+        {% elsif selected_product != blank and selected_product.featured_image != blank %}
+
+          <img
+            class="phs__image"
+            src="{{ selected_product.featured_image | image_url: width: 1800 }}"
+            alt="{{ selected_product.title | escape }}"
+            loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
+          >
+
+        {% else %}
+
+          <div class="phs__placeholder">
+            Add an image
+          </div>
+
+        {% endif %}
+
+
+        {% if selected_product != blank %}
+
+          <button
+            type="button"
+            class="phs__hotspot"
+            style="
+              left: {{ block.settings.hotspot_x }}%;
+              top: {{ block.settings.hotspot_y }}%;
+            "
+            data-product-id="{{ selected_product.id }}"
+            data-block-id="{{ block.id }}"
+            aria-label="View {{ selected_product.title | escape }}"
+          >
+            <span></span>
+            <span></span>
+          </button>
+
+
+          <!-- PRODUCT DATA FOR POPUP -->
+
+          <script type="application/json" id="phs-product-{{ section.id }}-{{ block.id }}">
+            {
+              "id": {{ selected_product.id | json }},
+              "title": {{ selected_product.title | json }},
+              "description": {{ selected_product.description | strip_html | json }},
+              "url": {{ selected_product.url | json }},
+              "featured_image": {% if selected_product.featured_image %}{{ selected_product.featured_image | image_url: width: 700 | json }}{% else %}null{% endif %},
+              "price": {{ selected_product.price | money | json }},
+              "price_raw": {{ selected_product.price | json }},
+              "available": {{ selected_product.available | json }},
+              "options": {{ selected_product.options_with_values | json }},
+              "variants": [
+                {% for variant in selected_product.variants %}
+                  {
+                    "id": {{ variant.id | json }},
+                    "title": {{ variant.title | json }},
+                    "available": {{ variant.available | json }},
+                    "price": {{ variant.price | money | json }},
+                    "price_raw": {{ variant.price | json }},
+                    "option1": {{ variant.option1 | json }},
+                    "option2": {{ variant.option2 | json }},
+                    "option3": {{ variant.option3 | json }},
+                    "image": {% if variant.featured_image %}{{ variant.featured_image | image_url: width: 700 | json }}{% else %}null{% endif %}
+                  }{% unless forloop.last %},{% endunless %}
+                {% endfor %}
+              ]
+            }
+          </script>
+
+        {% endif %}
+
+      </div>
+
+    {% endfor %}
+
+  </div>
+
+
+  <!-- =========================================
+       PRODUCT POPUP
+  ========================================== -->
+
+  <div
+    class="phs-modal"
+    id="phs-modal-{{ section.id }}"
+    aria-hidden="true"
+  >
+
+    <div class="phs-modal__overlay"></div>
+
+    <div
+      class="phs-modal__box"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Product details"
+    >
+
+      <button
+        type="button"
+        class="phs-modal__close"
+        aria-label="Close"
+      >
+        ×
+      </button>
+
+
+      <div class="phs-modal__product">
+
+        <!-- PRODUCT IMAGE -->
+
+        <div class="phs-modal__image-wrap">
+
+          <img
+            class="phs-modal__image"
+            src=""
+            alt=""
+          >
+
+        </div>
+
+
+        <!-- PRODUCT INFO -->
+
+        <div class="phs-modal__info">
+
+          <h2 class="phs-modal__title"></h2>
+
+          <div class="phs-modal__price"></div>
+
+          <div class="phs-modal__description"></div>
+
+          <div class="phs-modal__options"></div>
+
+
+          <div class="phs-modal__error"></div>
+
+
+          <button
+            type="button"
+            class="phs-modal__add"
+          >
+
+            <span class="phs-modal__add-text">
+              {{ section.settings.add_to_cart_text }}
+            </span>
+
+            <span class="phs-modal__add-arrow">
+              →
+            </span>
+
+          </button>
+
+
+          <a
+            class="phs-modal__view-product"
+            href=""
+          >
+            {{ section.settings.view_product_text }}
+          </a>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<style>
+
+  /* =========================================
+     SECTION
+  ========================================== */
+
+  #product-hotspot-{{ section.id }} {
+    width: 100%;
+    background: var(--phs-bg);
+    position: relative;
+  }
+
+
+  /* =========================================
+     GRID
+  ========================================== */
+
+  #product-hotspot-{{ section.id }} .phs__grid {
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns: repeat(
+      var(--phs-columns),
+      minmax(0, 1fr)
+    );
+
+    gap: var(--phs-gap);
+
+    padding:
+      {{ section.settings.padding_top }}px
+      {{ section.settings.padding_horizontal }}px
+      {{ section.settings.padding_bottom }}px;
+  }
+
+
+  /* =========================================
+     IMAGE ITEM
+  ========================================== */
+
+  #product-hotspot-{{ section.id }} .phs__item {
+    position: relative;
+
+    width: 100%;
+
+    overflow: hidden;
+
+    background: #f3f3f3;
+
+    aspect-ratio:
+      {{ section.settings.image_ratio }};
+  }
+
+
+  #product-hotspot-{{ section.id }} .phs__image {
+    position: absolute;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: {{ section.settings.image_fit }};
+
+    object-position: center center;
+
+    transition:
+      transform 0.5s ease;
+  }
+
+
+  /* Optional subtle zoom */
+
+  #product-hotspot-{{ section.id }} .phs__item:hover .phs__image {
+    transform:
+      scale({{ section.settings.hover_zoom }});
+  }
+
+
+  .phs__placeholder {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #eeeeee;
+
+    font-size: 14px;
+  }
+
+
+  /* =========================================
+     HOTSPOT
+  ========================================== */
+
+  #product-hotspot-{{ section.id }} .phs__hotspot {
+
+    position: absolute;
+
+    transform: translate(-50%, -50%);
+
+    width: var(--phs-hotspot-size);
+    height: var(--phs-hotspot-size);
+
+    padding: 0;
+
+    border: 0;
+
+    border-radius: 50%;
+
+    background: var(--phs-hotspot-bg);
+
+    color: var(--phs-hotspot-color);
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    cursor: pointer;
+
+    z-index: 5;
+
+    box-shadow:
+      0 1px 5px rgba(0,0,0,0.12);
+
+    transition:
+      transform 0.25s ease,
+      box-shadow 0.25s ease;
+  }
+
+
+  #product-hotspot-{{ section.id }} .phs__hotspot:hover {
+
+    transform:
+      translate(-50%, -50%)
+      scale(1.12);
+
+    box-shadow:
+      0 3px 12px rgba(0,0,0,0.22);
+  }
+
+
+  /* PLUS */
+
+  #product-hotspot-{{ section.id }} .phs__hotspot span {
+
+    position: absolute;
+
+    display: block;
+
+    width: 13px;
+
+    height: 1.5px;
+
+    background: var(--phs-hotspot-color);
+  }
+
+
+  #product-hotspot-{{ section.id }} .phs__hotspot span:last-child {
+
+    transform: rotate(90deg);
+  }
+
+
+  /* =========================================
+     MODAL
+  ========================================== */
+
+  #product-hotspot-{{ section.id }} .phs-modal {
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 99999;
+
+    display: none;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 20px;
+  }
+
+
+  #product-hotspot-{{ section.id }} .phs-modal.is-open {
+
+    display: flex;
+  }
+
+
+  /* DARK OVERLAY */
+
+  #product-hotspot-{{ section.id }} .phs-modal__overlay {
+
+    position: absolute;
+
+    inset: 0;
+
+    background:
+      rgba(0, 0, 0, 0.42);
+
+    backdrop-filter:
+      blur(1px);
+  }
+
+
+  /* =========================================
+     POPUP BOX
+  ========================================== */
+
+  #product-hotspot-{{ section.id }} .phs-modal__box {
+
+    position: relative;
+
+    z-index: 2;
+
+    width: min(
+      100%,
+      var(--phs-popup-width)
+    );
+
+    max-height:
+      calc(100vh - 40px);
+
+    overflow-y: auto;
+
+    background: #fff;
+
+    padding: 45px 25px 25px;
+
+    box-shadow:
+      0 15px 50px rgba(0,0,0,0.18);
+
+    animation:
+      phsModalIn 0.25s ease;
+  }
+
+
+  @keyframes phsModalIn {
+
+    from {
+      opacity: 0;
+      transform: translateY(15px) scale(.98);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+  }
+
+
+  /* =========================================
+     CLOSE
+  ========================================== */
+
+  #product-hotspot-{{ section.id }} .phs-modal__close {
+
+    position: absolute;
+
+    top: 10px;
+    right: 15px;
+
+    width: 30px;
+    height: 30px;
+
+    padding: 0;
+
+    border: 0;
+
+    background: transparent;
+
+    font-size: 30px;
+
+    font-weight: 300;
+
+    line-height: 1;
+
+    cursor: pointer;
+
+    color: #111;
+  }
+
+
+  /* =========================================
+     PRODUCT LAYOUT
+  ========================================== */
+
+  #product-hotspot-{{ section.id }} .phs-modal__product {
+
+    display: grid;
+
+    grid-template-columns:
+      150px 1fr;
+
+    gap: 15px;
+  }
+
+
+  #product-hotspot-{{ section.id }} .phs-modal__image-wrap {
+
+    width: 100%;
+
+    aspect-ratio: 1 / 1;
+
+    overflow: hidden;
+
+    background: #f5f5f5;
+  }
+
+
+  #product-hotspot-{{ section.id }} .phs-modal__image {
+
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+  }
+
+
+  /* =========================================
+     PRODUCT INFO
+  ========================================== */
+
+  #product-hotspot-{{ section.id }} .phs-modal__title {
+
+    margin: 0 0 22px;
+
+    font-size: 20px;
+
+    line-height: 1.15;
+
+    font-weight: 400;
+
+    color: #111;
+  }
+
+
+  #product-hotspot-{{ section.id }} .phs-modal__price {
+
+    margin-bottom: 15px;
+
+    font-size: 20px;
+
+    line-height: 1;
+
+    color: #111;
+  }
+
+
+  #product-hotspot-{{ section.id }} .phs-modal__description {
+
+    margin-bottom: 18px;
+
+    font-size: 14px;
+
+    line-height: 1.25;
+
+    color: #222;
+  }
+
+
+  /* =========================================
+     OPTIONS
+  ========================================== */
+
+  #product-hotspot-{{ section.id }} .phs-modal__options {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 14px;
+  }
+
+
+  .phs-option {
+    width: 100%;
+  }
+
+
+  .phs-option__label {
+
+    display: block;
+
+    margin-bottom: 7px;
+
+    font-size: 14px;
+
+    color: #111;
+  }
+
+
+  /* OPTION VALUES */
+
+  .phs-option__values {
+
+    display: flex;
+
+    width: 100%;
+  }
+
+
+  .phs-option__value {
+
+    flex: 1;
+
+    min-height: 48px;
+
+    padding: 10px;
+
+    background: #fff;
+
+    border: 1px solid #111;
+
+    margin-right: -1px;
+
+    font-size: 17px;
+
+    text-align: left;
+
+    cursor: pointer;
+  }
+
+
+  .phs-option__value.is-selected {
+
+    border-left: 4px solid #2463a6;
+
+    padding-left: 7px;
+  }
+
+
+  /* SELECT */
+
+  .phs-option select {
+
+    width: 100%;
+
+    height: 50px;
+
+    padding: 0 14px;
+
+    border: 1px solid #111;
+
+    background: #fff;
+
+    font-size: 16px;
+
+    appearance: auto;
+  }
+
+
+  /* =========================================
+     ERROR
+  ========================================== */
+
+  #product-hotspot-{{ section.id }} .phs-modal__error {
+
+    display: none;
+
+    margin-top: 12px;
+
+    color: #c00;
+
+    font-size: 13px;
+  }
+
+
+  #product-hotspot-{{ section.id }} .phs-modal__error.is-visible {
+
+    display: block;
+  }
+
+
+  /* =========================================
+     ADD TO CART
+  ========================================== */
+
+  #product-hotspot-{{ section.id }} .phs-modal__add {
+
+    position: relative;
+
+    width: 100%;
+
+    min-height: 56px;
+
+    margin-top: 25px;
+
+    padding: 10px 18px;
+
+    border: 0;
+
+    background: #000;
+
+    color: #fff;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    cursor: pointer;
+
+    overflow: hidden;
+
+    font-size: 16px;
+
+    transition:
+      transform .2s ease,
+      color .3s ease;
+  }
+
+
+  #product-hotspot-{{ section.id }} .phs-modal__add::before {
+
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    bottom: 0;
+
+    width: 100%;
+    height: 0;
+
+    background: var(--phs-hotspot-color);
+
+    transition:
+      height .35s cubic-bezier(.65,0,.35,1);
+  }
+
+
+  #product-hotspot-{{ section.id }} .phs-modal__add:hover {
+
+    color: #111;
+
+    transform:
+      translateY(-2px);
+  }
+
+
+  #product-hotspot-{{ section.id }} .phs-modal__add:hover::before {
+
+    height: 100%;
+  }
+
+
+  #product-hotspot-{{ section.id }} .phs-modal__add > span {
+
+    position: relative;
+
+    z-index: 2;
+  }
+
+
+  .phs-modal__add-arrow {
+
+    font-size: 25px;
+
+    transition:
+      transform .3s ease;
+  }
+
+
+  #product-hotspot-{{ section.id }} .phs-modal__add:hover .phs-modal__add-arrow {
+
+    transform:
+      translateX(8px);
+  }
+
+
+  /* LOADING */
+
+  #product-hotspot-{{ section.id }} .phs-modal__add.is-loading {
+
+    opacity: .65;
+
+    pointer-events: none;
+  }
+
+
+  /* VIEW PRODUCT */
+
+  #product-hotspot-{{ section.id }} .phs-modal__view-product {
+
+    display: block;
+
+    margin-top: 15px;
+
+    color: #111;
+
+    text-align: center;
+
+    font-size: 13px;
+
+    text-decoration: underline;
+  }
+
+
+  /* =========================================
+     TABLET
+  ========================================== */
+
+  @media screen and (max-width: 900px) {
+
+    #product-hotspot-{{ section.id }} .phs__grid {
+
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+    }
+
+  }
+
+
+  /* =========================================
+     MOBILE
+  ========================================== */
+
+  @media screen and (max-width: 600px) {
+
+    #product-hotspot-{{ section.id }} .phs__grid {
+
+      grid-template-columns: 1fr;
+
+      gap: 10px;
+
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+
+
+    #product-hotspot-{{ section.id }} .phs-modal {
+
+      padding: 10px;
+    }
+
+
+    #product-hotspot-{{ section.id }} .phs-modal__box {
+
+      padding:
+        42px 15px 18px;
+
+      max-height:
+        calc(100vh - 20px);
+    }
+
+
+    #product-hotspot-{{ section.id }} .phs-modal__product {
+
+      grid-template-columns: 1fr;
+
+      gap: 18px;
+    }
+
+
+    #product-hotspot-{{ section.id }} .phs-modal__image-wrap {
+
+      max-height: 280px;
+
+      aspect-ratio: 1 / 1;
+    }
+
+  }
+
+</style>
+
+
+<script>
+
+  (function () {
+
+    const section = document.querySelector(
+      '#product-hotspot-{{ section.id }}'
+    );
+
+    if (!section) return;
+
+
+    const modal = section.querySelector('.phs-modal');
+
+    const modalImage =
+      section.querySelector('.phs-modal__image');
+
+    const modalTitle =
+      section.querySelector('.phs-modal__title');
+
+    const modalPrice =
+      section.querySelector('.phs-modal__price');
+
+    const modalDescription =
+      section.querySelector('.phs-modal__description');
+
+    const modalOptions =
+      section.querySelector('.phs-modal__options');
+
+    const modalAdd =
+      section.querySelector('.phs-modal__add');
+
+    const modalError =
+      section.querySelector('.phs-modal__error');
+
+    const viewProduct =
+      section.querySelector('.phs-modal__view-product');
+
+    const closeButton =
+      section.querySelector('.phs-modal__close');
+
+    const overlay =
+      section.querySelector('.phs-modal__overlay');
+
+
+    let currentProduct = null;
+
+    let selectedOptions = {};
+
+    let currentVariant = null;
+
+
+    /* =========================================
+       FORMAT PRODUCT OPTIONS
+    ========================================== */
+
+    function buildOptions(product) {
+
+      modalOptions.innerHTML = '';
+
+      selectedOptions = {};
+
+
+      if (!product.options || product.options.length === 0) {
+
+        currentVariant =
+          product.variants.find(
+            variant => variant.available
+          ) || product.variants[0];
+
+        return;
+      }
+
+
+      product.options.forEach(function (option, index) {
+
+        const optionName =
+          option.name;
+
+        const values =
+          option.values || [];
+
+
+        selectedOptions[index] =
+          values[0];
+
+
+        const wrapper =
+          document.createElement('div');
+
+        wrapper.className =
+          'phs-option';
+
+
+        const label =
+          document.createElement('label');
+
+        label.className =
+          'phs-option__label';
+
+        label.textContent =
+          optionName;
+
+
+        wrapper.appendChild(label);
+
+
+        /*
+         * COLOR / SMALL OPTION LIST
+         *
+         * Other options use select.
+         */
+
+        if (
+          values.length <= 5
+        ) {
+
+          const valuesWrapper =
+            document.createElement('div');
+
+          valuesWrapper.className =
+            'phs-option__values';
+
+
+          values.forEach(function (value, valueIndex) {
+
+            const button =
+              document.createElement('button');
+
+            button.type =
+              'button';
+
+            button.className =
+              'phs-option__value';
+
+            if (valueIndex === 0) {
+
+              button.classList.add(
+                'is-selected'
+              );
+
+            }
+
+            button.textContent =
+              value;
+
+
+            button.addEventListener(
+              'click',
+              function () {
+
+                selectedOptions[index] =
+                  value;
+
+
+                valuesWrapper
+                  .querySelectorAll(
+                    '.phs-option__value'
+                  )
+                  .forEach(function (item) {
+
+                    item.classList.remove(
+                      'is-selected'
+                    );
+
+                  });
+
+
+                button.classList.add(
+                  'is-selected'
+                );
+
+
+                updateVariant();
+
+              }
+            );
+
+
+            valuesWrapper.appendChild(
+              button
+            );
+
+          });
+
+
+          wrapper.appendChild(
+            valuesWrapper
+          );
+
+        } else {
+
+          const select =
+            document.createElement('select');
+
+
+          values.forEach(function (value) {
+
+            const optionElement =
+              document.createElement('option');
+
+            optionElement.value =
+              value;
+
+            optionElement.textContent =
+              value;
+
+            select.appendChild(
+              optionElement
+            );
+
+          });
+
+
+          select.addEventListener(
+            'change',
+            function () {
+
+              selectedOptions[index] =
+                select.value;
+
+              updateVariant();
+
+            }
+          );
+
+
+          wrapper.appendChild(
+            select
+          );
+
+        }
+
+
+        modalOptions.appendChild(
+          wrapper
+        );
+
+      });
+
+
+      updateVariant();
+
+    }
+
+
+    /* =========================================
+       FIND MATCHING VARIANT
+    ========================================== */
+
+    function updateVariant() {
+
+      if (!currentProduct) return;
+
+
+      currentVariant =
+        currentProduct.variants.find(
+          function (variant) {
+
+            return variant.available &&
+              Object.keys(selectedOptions)
+                .every(function (index) {
+
+                  return (
+                    variant[
+                      'option' +
+                      (parseInt(index) + 1)
+                    ] ===
+                    selectedOptions[index]
+                  );
+
+                });
+
+          }
+        );
+
+
+      /*
+       * If exact available variant doesn't exist,
+       * find matching unavailable variant.
+       */
+
+      if (!currentVariant) {
+
+        currentVariant =
+          currentProduct.variants.find(
+            function (variant) {
+
+              return Object.keys(selectedOptions)
+                .every(function (index) {
+
+                  return (
+                    variant[
+                      'option' +
+                      (parseInt(index) + 1)
+                    ] ===
+                    selectedOptions[index]
+                  );
+
+                });
+
+            }
+          );
+
+      }
+
+
+      if (currentVariant) {
+
+        modalPrice.textContent =
+          currentVariant.price;
+
+
+        if (currentVariant.image) {
+
+          modalImage.src =
+            currentVariant.image;
+
+        }
+
+
+        modalAdd.disabled =
+          !currentVariant.available;
+
+        modalAdd.querySelector(
+          '.phs-modal__add-text'
+        ).textContent =
+          currentVariant.available
+            ? '{{ section.settings.add_to_cart_text | escape }}'
+            : '{{ section.settings.sold_out_text | escape }}';
+
+      }
+
+    }
+
+
+    /* =========================================
+       OPEN PRODUCT
+    ========================================== */
+
+    function openProduct(product) {
+
+      currentProduct =
+        product;
+
+
+      modalTitle.textContent =
+        product.title;
+
+
+      modalDescription.textContent =
+        product.description || '';
+
+
+      modalImage.src =
+        product.featured_image || '';
+
+
+      modalImage.alt =
+        product.title;
+
+
+      viewProduct.href =
+        product.url;
+
+
+      modalPrice.textContent =
+        product.price;
+
+
+      modalError.classList.remove(
+        'is-visible'
+      );
+
+      modalError.textContent =
+        '';
+
+
+      buildOptions(product);
+
+
+      modal.classList.add(
+        'is-open'
+      );
+
+      modal.setAttribute(
+        'aria-hidden',
+        'false'
+      );
+
+      document.body.style.overflow =
+        'hidden';
+
+    }
+
+
+    /* =========================================
+       CLOSE PRODUCT
+    ========================================== */
+
+    function closeModal() {
+
+      modal.classList.remove(
+        'is-open'
+      );
+
+      modal.setAttribute(
+        'aria-hidden',
+        'true'
+      );
+
+      document.body.style.overflow =
+        '';
+
+    }
+
+
+    /* =========================================
+       HOTSPOT CLICK
+    ========================================== */
+
+    section
+      .querySelectorAll('.phs__hotspot')
+      .forEach(function (hotspot) {
+
+        hotspot.addEventListener(
+          'click',
+          function () {
+
+            const blockId =
+              hotspot.dataset.blockId;
+
+
+            const dataElement =
+              document.getElementById(
+                'phs-product-{{ section.id }}-' +
+                blockId
+              );
+
+
+            if (!dataElement) return;
+
+
+            try {
+
+              const product =
+                JSON.parse(
+                  dataElement.textContent
+                );
+
+
+              openProduct(product);
+
+            } catch (error) {
+
+              console.error(
+                'Product data error:',
+                error
+              );
+
+            }
+
+          }
+        );
+
+      });
+
+
+    /* =========================================
+       ADD TO CART
+    ========================================== */
+
+    modalAdd.addEventListener(
+      'click',
+      function () {
+
+        if (
+          !currentVariant ||
+          !currentVariant.available
+        ) {
+
+          modalError.textContent =
+            '{{ section.settings.select_variant_error | escape }}';
+
+          modalError.classList.add(
+            'is-visible'
+          );
+
+          return;
+
+        }
+
+
+        modalAdd.classList.add(
+          'is-loading'
+        );
+
+
+        modalError.classList.remove(
+          'is-visible'
+        );
+
+
+        fetch(
+          window.Shopify.routes.root +
+          'cart/add.js',
+          {
+
+            method: 'POST',
+
+            headers: {
+              'Content-Type':
+                'application/json'
+            },
+
+            body: JSON.stringify({
+
+              items: [
+                {
+                  id: currentVariant.id,
+                  quantity: 1
+                }
+              ]
+
+            })
+
+          }
+        )
+
+        .then(function (response) {
+
+          if (!response.ok) {
+
+            return response
+              .json()
+              .then(function (error) {
+
+                throw error;
+
+              });
+
+          }
+
+          return response.json();
+
+        })
+
+        .then(function () {
+
+          modalAdd.classList.remove(
+            'is-loading'
+          );
+
+
+          /*
+           * Close popup after adding.
+           */
+
+          closeModal();
+
+
+          /*
+           * Refresh Shopify cart UI
+           * when available.
+           */
+
+          document.dispatchEvent(
+            new CustomEvent(
+              'cart:refresh'
+            )
+          );
+
+
+          /*
+           * Theme cart drawer support.
+           */
+
+          if (
+            typeof window.refreshCart ===
+            'function'
+          ) {
+
+            window.refreshCart();
+
+          }
+
+        })
+
+        .catch(function (error) {
+
+          console.error(
+            'Add to cart error:',
+            error
+          );
+
+
+          modalAdd.classList.remove(
+            'is-loading'
+          );
+
+
+          modalError.textContent =
+            '{{ section.settings.cart_error_text | escape }}';
+
+          modalError.classList.add(
+            'is-visible'
+          );
+
+        });
+
+      }
+    );
+
+
+    /* =========================================
+       CLOSE EVENTS
+    ========================================== */
+
+    closeButton.addEventListener(
+      'click',
+      closeModal
+    );
+
+
+    overlay.addEventListener(
+      'click',
+      closeModal
+    );
+
+
+    document.addEventListener(
+      'keydown',
+      function (event) {
+
+        if (
+          event.key === 'Escape' &&
+          modal.classList.contains('is-open')
+        ) {
+
+          closeModal();
+
+        }
+
+      }
+    );
+
+
+  })();
+
+</script>
+
+
+{% schema %}
+
+{
+  "name": "Product Hotspot Showcase",
+
+  "settings": [
+
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+
+    {
+      "type": "select",
+      "id": "columns",
+      "label": "Desktop columns",
+      "options": [
+        {
+          "value": "2",
+          "label": "2 columns"
+        },
+        {
+          "value": "3",
+          "label": "3 columns"
+        },
+        {
+          "value": "4",
+          "label": "4 columns"
+        }
+      ],
+      "default": "3"
+    },
+
+    {
+      "type": "range",
+      "id": "gap",
+      "label": "Image gap",
+      "min": 0,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "default": 25
+    },
+
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Top padding",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "default": 20
+    },
+
+    {
+      "type": "range",
+      "id": "padding_horizontal",
+      "label": "Horizontal padding",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "default": 30
+    },
+
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Bottom padding",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "default": 20
+    },
+
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "label": "Image ratio",
+      "options": [
+        {
+          "value": "1 / 1",
+          "label": "Square"
+        },
+        {
+          "value": "4 / 5",
+          "label": "Portrait"
+        },
+        {
+          "value": "3 / 4",
+          "label": "Portrait 3:4"
+        },
+        {
+          "value": "4 / 3",
+          "label": "Landscape"
+        },
+        {
+          "value": "16 / 9",
+          "label": "Wide"
+        }
+      ],
+      "default": "4 / 5"
+    },
+
+    {
+      "type": "select",
+      "id": "image_fit",
+      "label": "Image fit",
+      "options": [
+        {
+          "value": "cover",
+          "label": "Cover"
+        },
+        {
+          "value": "contain",
+          "label": "Contain"
+        }
+      ],
+      "default": "cover"
+    },
+
+    {
+      "type": "range",
+      "id": "hover_zoom",
+      "label": "Image hover zoom",
+      "min": 1,
+      "max": 1.1,
+      "step": 0.01,
+      "default": 1
+    },
+
+    {
+      "type": "header",
+      "content": "Hotspot"
+    },
+
+    {
+      "type": "range",
+      "id": "hotspot_size",
+      "label": "Hotspot size",
+      "min": 20,
+      "max": 60,
+      "step": 2,
+      "unit": "px",
+      "default": 30
+    },
+
+    {
+      "type": "color",
+      "id": "hotspot_background",
+      "label": "Hotspot background",
+      "default": "#ffffff"
+    },
+
+    {
+      "type": "color",
+      "id": "hotspot_color",
+      "label": "Hotspot / hover color",
+      "default": "#111111"
+    },
+
+    {
+      "type": "header",
+      "content": "Popup"
+    },
+
+    {
+      "type": "range",
+      "id": "popup_width",
+      "label": "Popup width",
+      "min": 400,
+      "max": 800,
+      "step": 10,
+      "unit": "px",
+      "default": 520
+    },
+
+    {
+      "type": "text",
+      "id": "add_to_cart_text",
+      "label": "Add to cart text",
+      "default": "ADD TO CART"
+    },
+
+    {
+      "type": "text",
+      "id": "sold_out_text",
+      "label": "Sold out text",
+      "default": "SOLD OUT"
+    },
+
+    {
+      "type": "text",
+      "id": "view_product_text",
+      "label": "View product text",
+      "default": "View full product"
+    },
+
+    {
+      "type": "text",
+      "id": "select_variant_error",
+      "label": "Variant error",
+      "default": "Please select an available option."
+    },
+
+    {
+      "type": "text",
+      "id": "cart_error_text",
+      "label": "Cart error",
+      "default": "Unable to add this product to cart."
+    },
+
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Section background",
+      "default": "#ffffff"
+    }
+
+  ],
+
+  "blocks": [
+
+    {
+      "type": "product_image",
+
+      "name": "Product Image",
+
+      "settings": [
+
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+
+        {
+          "type": "product",
+          "id": "product",
+          "label": "Product"
+        },
+
+        {
+          "type": "header",
+          "content": "Hotspot position"
+        },
+
+        {
+          "type": "range",
+          "id": "hotspot_x",
+          "label": "Horizontal position",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%",
+          "default": 50
+        },
+
+        {
+          "type": "range",
+          "id": "hotspot_y",
+          "label": "Vertical position",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%",
+          "default": 50
+        }
+
+      ]
+
+    }
+
+  ],
+
+  "presets": [
+
+    {
+      "name": "Product Hotspot Showcase",
+
+      "blocks": [
+        {
+          "type": "product_image"
+        },
+        {
+          "type": "product_image"
+        },
+        {
+          "type": "product_image"
+        },
+        {
+          "type": "product_image"
+        },
+        {
+          "type": "product_image"
+        },
+        {
+          "type": "product_image"
+        }
+      ]
+
+    }
+
+  ]
+
+}
+
+{% endschema %}
