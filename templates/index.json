@@ -316,11 +316,67 @@
         "button_text_color": "#111111",
         "accent_color": "#fff200"
       }
+    },
+    "product_hotspot_showcase_7aPzHa": {
+      "type": "product-hotspot-showcase",
+      "blocks": {
+        "product_image_YrNLEM": {
+          "type": "product_image",
+          "settings": {
+            "image": "shopify://shop_images/casual-fashion-woman_925x_56b56608-f207-45c1-b677-bb5aa26c1c7a.jpg",
+            "product": "classic-varsity-top",
+            "hotspot_x": 50,
+            "hotspot_y": 50
+          }
+        },
+        "product_image_XBnDMV": {
+          "type": "product_image",
+          "settings": {
+            "product": "",
+            "hotspot_x": 50,
+            "hotspot_y": 50
+          }
+        },
+        "product_image_DhhCjW": {
+          "type": "product_image",
+          "settings": {
+            "product": "",
+            "hotspot_x": 50,
+            "hotspot_y": 50
+          }
+        }
+      },
+      "block_order": [
+        "product_image_YrNLEM",
+        "product_image_XBnDMV",
+        "product_image_DhhCjW"
+      ],
+      "name": "Product Hotspot Showcase",
+      "settings": {
+        "columns": "3",
+        "gap": 25,
+        "padding_top": 20,
+        "padding_horizontal": 30,
+        "padding_bottom": 20,
+        "image_ratio": "4 / 5",
+        "image_fit": "cover",
+        "hotspot_size": 30,
+        "hotspot_background": "#ffffff",
+        "hotspot_color": "#111111",
+        "popup_width": 520,
+        "add_to_cart_text": "ADD TO CART",
+        "sold_out_text": "SOLD OUT",
+        "view_product_text": "View full product",
+        "select_variant_error": "Please select an available option.",
+        "cart_error_text": "Unable to add this product to cart.",
+        "background_color": "#ffffff"
+      }
     }
   },
   "order": [
     "hero_jVaWmY",
     "product_list_fa6P9H",
-    "hero_section_ghLbgg"
+    "hero_section_ghLbgg",
+    "product_hotspot_showcase_7aPzHa"
   ]
 }
